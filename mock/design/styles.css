@@ -1,4 +1,4 @@
-/* stady — design tokens */
+/* tesupura — design tokens */
 :root {
   /* クリーム地（白に近い暖色トーン） */
   --bg: oklch(0.975 0.012 75);
@@ -94,19 +94,14 @@ body {
   gap: 12px;
 }
 .app-logo {
-  font-family: var(--font-num);
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.02em;
-  color: var(--fg);
   display: flex;
   align-items: center;
-  gap: 8px;
+  min-width: 0;
 }
-.app-logo .dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
+.app-logo-image {
+  display: block;
+  width: 150px;
+  height: auto;
 }
 .app-avatar {
   width: 32px; height: 32px;

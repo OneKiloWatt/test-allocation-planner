@@ -1,6 +1,7 @@
 /* global React */
 // PAGES/TOP.md — 初回ランディング
 const { useState: useStateTop } = React;
+const BRAND = window.APP_BRAND;
 
 function TopPage({ onStart, onLogin }) {
   return (
@@ -11,11 +12,12 @@ function TopPage({ onStart, onLogin }) {
       position: "relative",
     }}>
       {/* Brand */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }}>
-        <div style={{ width: 12, height: 12, borderRadius: 999, background: "var(--accent)" }}/>
-        <div style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.01em" }}>
-          テスト配分ノート
-        </div>
+      <div style={{ marginBottom: 40 }}>
+        <img
+          src="logo.svg"
+          alt={`${BRAND.nickname} ロゴ`}
+          style={{ display: "block", width: 210, height: "auto" }}
+        />
       </div>
 
       {/* Headline */}
@@ -25,7 +27,8 @@ function TopPage({ onStart, onLogin }) {
           margin: 0, letterSpacing: "-0.01em",
           textWrap: "pretty",
         }}>
-          テスト勉強、どこから始めるか<br/>
+          テスト勉強、<br/>
+          何から始めるか<br/>
           <span style={{ color: "var(--accent)" }}>迷わなくなる。</span>
         </h1>
         <p style={{

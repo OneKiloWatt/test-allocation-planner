@@ -1,5 +1,6 @@
 /* global React */
 const { useState, useEffect, useMemo } = React;
+const BRAND = window.APP_BRAND;
 
 // ─────────────────────────────────────────────
 // Shared primitives
@@ -59,7 +60,7 @@ function AppHeader({ greeting }) {
   return (
     <header className="app-header">
       <div className="app-logo">
-        <span className="dot"/>テスト配分ノート
+        <img src="logo.svg" alt={`${BRAND.nickname} ロゴ`} className="app-logo-image" />
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span className="badge">匿名モード</span>
@@ -465,21 +466,21 @@ const STATES = [
 ];
 
 function App() {
-  const [page, setPage] = useState(() => localStorage.getItem("stady.page") || "top");
-  const [state, setState] = useState(() => localStorage.getItem("stady.home.state") || "active");
+  const [page, setPage] = useState(() => localStorage.getItem(BRAND.storagePageKey) || "top");
+  const [state, setState] = useState(() => localStorage.getItem(BRAND.storageStateKey) || "active");
   const [savePrompt, setSavePrompt] = useState(false);
   const phoneRef = React.useRef(null);
   const [phoneEl, setPhoneEl] = useState(null);
   React.useEffect(() => { setPhoneEl(phoneRef.current); }, []);
 
-  useEffect(() => { localStorage.setItem("stady.home.state", state); }, [state]);
-  useEffect(() => { localStorage.setItem("stady.page", page); }, [page]);
+  useEffect(() => { localStorage.setItem(BRAND.storageStateKey, state); }, [state]);
+  useEffect(() => { localStorage.setItem(BRAND.storagePageKey, page); }, [page]);
 
   const go = (p) => setPage(p);
 
   return (
     <div className="stage">
-      <div className="phone" ref={phoneRef} role="application" aria-label="stady mobile">
+      <div className="phone" ref={phoneRef} role="application" aria-label={BRAND.ariaLabel}>
         <div className="phone-notch"/>
         <div className="phone-content">
           {page === "top" && window.TopPage && (
