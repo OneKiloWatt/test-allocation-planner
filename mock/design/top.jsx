@@ -25,15 +25,15 @@ function TopPage({ onStart, onLogin }) {
           margin: 0, letterSpacing: "-0.01em",
           textWrap: "pretty",
         }}>
-          テスト前の勉強を、<br/>
-          <span style={{ color: "var(--accent)" }}>配分から</span>組みなおす。
+          テスト勉強、どこから始めるか<br/>
+          <span style={{ color: "var(--accent)" }}>迷わなくなる。</span>
         </h1>
         <p style={{
           margin: "14px 0 0", fontSize: 14,
           color: "var(--fg-muted)", lineHeight: 1.7,
         }}>
-          テスト前の勉強計画を作り、進捗を記録し、<br/>
-          結果を振り返るアプリです。
+          科目と日数を入れるだけで、<br/>
+          何をどれだけやればいいか見えてくる。
         </p>
       </div>
 
@@ -52,7 +52,7 @@ function TopPage({ onStart, onLogin }) {
           <Divider/>
           <StepRow n={2} title="学習プランを作る" sub="自動で組む・手動で組むを選べる"/>
           <Divider/>
-          <StepRow n={3} title="記録して振り返る" sub="結果を次のテストに引き継げる"/>
+          <StepRow n={3} title="記録して次に活かす" sub="やったことが次のテストで使える"/>
         </div>
       </div>
 
@@ -64,9 +64,7 @@ function TopPage({ onStart, onLogin }) {
         <button className="btn btn-primary btn-lg btn-block" onClick={onStart}>
           すぐ試す
         </button>
-        <button className="btn btn-ghost btn-lg btn-block" onClick={onLogin}>
-          ログイン
-        </button>
+        <button className="btn btn-ghost" style={{width:"100%", fontSize:14, padding:"10px 14px"}} onClick={onLogin}>ログインする</button>
       </div>
 
       {/* Anonymous notice — 明確に、脅さず */}
@@ -75,8 +73,7 @@ function TopPage({ onStart, onLogin }) {
         fontSize: 12, lineHeight: 1.6,
         color: "var(--fg-subtle)", textAlign: "center",
       }}>
-        まずは匿名で試せます。<br/>
-        記録を別の端末でも使いたい場合はログインしてください。
+        登録なしで、今すぐ使えます。（ログインは後でもOK）
       </p>
     </div>
   );
