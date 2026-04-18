@@ -10,6 +10,7 @@
 | 状態管理 | Zustand |
 | フォーム | React Hook Form + Zod |
 | バックエンド/認証 | Supabase |
+| ホスティング | Vercel |
 
 ## Pages Router を選ぶ理由
 - このアプリはlocalStorage・Zustand・フォーム操作がメイン
