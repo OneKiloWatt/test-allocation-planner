@@ -6,6 +6,88 @@
 - 次回提案に必要な最小構造だけを持つ
 - MVPの保存モデルは `exams` 集約 + `progress_logs` 別とする
 
+## DB可視化
+
+### MVPの保存モデル
+
+```mermaid
+erDiagram
+    USERS ||--o{ EXAMS : owns
+    USERS ||--o{ PROGRESS_LOGS : records
+    EXAMS ||--o{ PROGRESS_LOGS : has
+
+    USERS {
+        uuid id PK
+        string email
+    }
+
+    EXAMS {
+        uuid id PK
+        uuid user_id FK
+        int version
+        string name
+        string term_type
+        date start_date
+        date end_date
+        string status
+        string planning_mode
+        jsonb schedule_days
+        jsonb subjects
+        jsonb study_plans
+        jsonb daily_plans
+        jsonb exam_results
+        jsonb availability_rule
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    PROGRESS_LOGS {
+        uuid id PK
+        uuid user_id FK
+        uuid test_id FK
+        string subject_id
+        int logged_minutes
+        string memo
+        timestamptz logged_at
+        timestamptz created_at
+    }
+```
+
+### 集約の中身
+
+`exams` は 1テスト = 1レコード を基本にして、画面で一緒に使う構造を JSON で集約して持つ。
+
+```mermaid
+flowchart TD
+    EXAM["exams 1行<br/>1つのテスト"] --> SCHEDULE["schedule_days[]<br/>いつ勉強できるか"]
+    EXAM --> SUBJECTS["subjects[]<br/>各教科の前回点・目標点"]
+    EXAM --> STUDY["study_plans[]<br/>教科ごとの総勉強時間"]
+    EXAM --> DAILY["daily_plans[]<br/>日ごとの学習プラン"]
+    EXAM --> RESULT["exam_results[]<br/>テスト後の結果"]
+    EXAM --> AVAIL["availability_rule<br/>生活パターン"]
+```
+
+### ねらい
+
+- `exams`
+  - テスト作成から結果入力までの主データをまとめて保存する
+- `progress_logs`
+  - 実績は追記型で別保存する
+- 導出値
+  - `logged_minutes` の累計
+  - `remaining_minutes`
+  - 進捗率
+  は保存せず、`progress_logs` 集計で出す
+
+### 将来の正規化候補
+
+MVP後に検索性・集計性・更新競合が問題になったら、次を独立テーブル化する余地がある。
+
+- `exam_subjects`
+- `study_plans`
+- `daily_plans`
+- `exam_results`
+
 ## Test
 - id
 - version
