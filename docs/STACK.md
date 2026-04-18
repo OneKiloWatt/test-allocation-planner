@@ -22,6 +22,11 @@
 - ログインユーザー: Supabaseに同期
 - スキーマはMVP完了まで最小限に保つ
 - 最初のテーブルは `exams` と `progress_logs` の2つだけ
+- `exams` は `subjects` `studyPlans` `dailyPlans` `examResults` `availabilityRule` `scheduleDays` を集約して持つ
+- `progress_logs` は追記型で別管理する
+- `exam` 更新は原則として全体保存、`progress_logs` は別追記に固定する
+- `version` と `migration` を持ち、version不一致時は黙って上書きしない
+- 保存形式は repository層で隠蔽し、保存前後は Zod で検証する
 
 ## フォルダ構成の方針
 - `app/` や `pages/` は浅くフラットに保つ

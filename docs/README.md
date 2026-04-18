@@ -1,34 +1,42 @@
 # docs
 
-設計書の置き場。AIに実装を依頼する際はこのディレクトリを渡す。
+設計書の本体。実装やレビューに入る前の参照起点です。
 
-## 読む順番
+## まずここから
 
-1. [REQUIREMENTS.md](REQUIREMENTS.md) — ユーザー像・機能要件・やらないこと
-2. [SECURITY.md](SECURITY.md) — データ方針・危険な仕様の定義
-3. [DESIGN.md](DESIGN.md) — UIルール・カラーパレット・コンポーネント語彙
-4. [ENTITIES.md](ENTITIES.md) — データエンティティの責務分担
-5. [DATA_STRUCTURES.md](DATA_STRUCTURES.md) — フィールド定義・JSON形状
-6. [STATE_TRANSITIONS.md](STATE_TRANSITIONS.md) — テストの状態遷移・ホームの表示分岐
-7. [ALLOCATION_LOGIC.md](ALLOCATION_LOGIC.md) — 学習時間配分の計算ロジック
-8. [STACK.md](STACK.md) — 技術スタック・ホスティング
-9. [PAGES/](PAGES/) — 画面別仕様（下記）
+- 全体像を素早くつかむ: [REQUIREMENTS.md](REQUIREMENTS.md)
+- 画面の流れを追う: [PAGES/README.md](PAGES/README.md)
+- データとロジックを見る: [ENTITIES.md](ENTITIES.md), [DATA_STRUCTURES.md](DATA_STRUCTURES.md), [ALLOCATION_LOGIC.md](ALLOCATION_LOGIC.md)
 
-## PAGES/
+## 用途別インデックス
 
-| ファイル | 画面 | 概要 |
-|---|---|---|
-| [TOP.md](PAGES/TOP.md) | トップページ | 匿名/ログイン導線 |
-| [AUTH.md](PAGES/AUTH.md) | 認証 | ログイン・新規登録 |
-| [HOME.md](PAGES/HOME.md) | ホーム | 状態別メイン画面 |
-| [TEST_CREATE.md](PAGES/TEST_CREATE.md) | テスト作成 | 日程・科目入力 |
-| [CARRY_OVER.md](PAGES/CARRY_OVER.md) | ~~前回引き継ぎ~~（廃止） | TARGET_SCOREに統合 |
-| [TARGET_SCORE.md](PAGES/TARGET_SCORE.md) | 目標点数入力 | 教科別目標設定 |
-| [PLAN_MODE.md](PAGES/PLAN_MODE.md) | 日程/予定入力 | 自動/手動モード選択 |
-| [ALLOCATION_RESULT.md](PAGES/ALLOCATION_RESULT.md) | 配分サマリー | DAILY_PLAN上部に表示 |
-| [DAILY_PLAN.md](PAGES/DAILY_PLAN.md) | 日ごとの学習プラン | 日付×科目×時間 |
-| [PROGRESS_LOG.md](PAGES/PROGRESS_LOG.md) | 進捗登録 | 今日やった分を記録 |
-| [SAVE_PROMPT.md](PAGES/SAVE_PROMPT.md) | 保存案内 | 匿名利用時のログイン促進 |
-| [REVIEW.md](PAGES/REVIEW.md) | 振り返り | テスト結果カード |
-| [RESULT_ENTRY.md](PAGES/RESULT_ENTRY.md) | 結果入力 | テスト後の点数・時間記録 |
-| [TIPS.md](PAGES/TIPS.md) | 豆知識 | 画面別ローテーションtips（42個） |
+### 1. 方向性を決める
+
+1. [REQUIREMENTS.md](REQUIREMENTS.md) - ユーザー像、機能要件、やらないこと
+2. [SECURITY.md](SECURITY.md) - データ方針、危険な仕様の定義
+3. [STACK.md](STACK.md) - 技術スタック、ホスティング方針
+
+### 2. UIと画面を詰める
+
+1. [DESIGN.md](DESIGN.md) - UIルール、トーン、コンポーネント語彙
+2. [STATE_TRANSITIONS.md](STATE_TRANSITIONS.md) - 状態遷移とホーム表示分岐
+3. [PAGES/README.md](PAGES/README.md) - 画面一覧と利用フロー
+
+### 3. 実装に落とす
+
+1. [ENTITIES.md](ENTITIES.md) - エンティティ責務
+2. [DATA_STRUCTURES.md](DATA_STRUCTURES.md) - フィールド定義、JSON形状
+3. [ALLOCATION_LOGIC.md](ALLOCATION_LOGIC.md) - 学習時間配分ロジック
+
+## ディレクトリ構成
+
+| パス | 内容 |
+|---|---|
+| [`PAGES/`](PAGES/README.md) | 画面単位の仕様 |
+| [`ARCHIVE/`](ARCHIVE/README.md) | 廃止済み・参考保持の仕様 |
+
+## 読み順の推奨
+
+- PMや仕様整理: `REQUIREMENTS -> SECURITY -> PAGES`
+- デザイナーやUI実装: `DESIGN -> STATE_TRANSITIONS -> PAGES`
+- アプリ実装: `REQUIREMENTS -> ENTITIES -> DATA_STRUCTURES -> ALLOCATION_LOGIC -> PAGES`

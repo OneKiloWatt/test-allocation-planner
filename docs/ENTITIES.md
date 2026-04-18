@@ -42,6 +42,7 @@
 
 持つもの:
 - exam_id
+- subject_id
 - subject_name
 - previous_score
 - previous_study_minutes
@@ -58,7 +59,7 @@
 
 持つもの:
 - exam_id
-- subject_name
+- subject_id
 - planned_minutes
 - planned_ratio
 - reason
@@ -74,8 +75,9 @@
 
 持つもの:
 - exam_id
+- plan_row_id
 - date
-- subject_name
+- subject_id
 - planned_minutes
 - source
   - auto / manual
@@ -91,7 +93,7 @@
 持つもの:
 - exam_id
 - date
-- subject_name
+- subject_id
 - logged_minutes
 - memo
 
@@ -106,7 +108,7 @@
 
 持つもの:
 - exam_id
-- subject_name
+- subject_id
 - actual_score
 - actual_study_minutes
 - note
@@ -124,15 +126,15 @@
 - exam_id
 - weekday_club_minutes
 - weekday_no_club_minutes
-- saturday_minutes
-- sunday_minutes
+- weekend_minutes
 - club_days
+- study_start_date
 - pre_exam_rest_mode
 
 使う画面:
 - 日程/予定入力
 
-## 8. SpecialCase
+## 8. SpecialCase（MVPでは未実装）
 意味:
 - 週の型で表せない例外日
 

@@ -1,24 +1,18 @@
 # TestAllocationPlanner
 
-現行の主本体は `docs/` と `mock/` です。
+テスト前の学習計画を作り、進捗を記録し、結果を振り返るアプリの設計リポジトリ。
+主資料は [`docs/`](docs/README.md)、画面モックは [`mock/`](mock/README.md) にまとめています。
 
-## 主資料
-- [docs/README.md](/mnt/c/Users/richikawa/Desktop/ichiji_一時的資料/履歴/test-allocation-planner/docs/README.md)
-- [docs/REQUIREMENTS.md](/mnt/c/Users/richikawa/Desktop/ichiji_一時的資料/履歴/test-allocation-planner/docs/REQUIREMENTS.md)
-- [docs/DESIGN.md](/mnt/c/Users/richikawa/Desktop/ichiji_一時的資料/履歴/test-allocation-planner/docs/DESIGN.md)
-- [docs/ENTITIES.md](/mnt/c/Users/richikawa/Desktop/ichiji_一時的資料/履歴/test-allocation-planner/docs/ENTITIES.md)
-- [docs/STATE_TRANSITIONS.md](/mnt/c/Users/richikawa/Desktop/ichiji_一時的資料/履歴/test-allocation-planner/docs/STATE_TRANSITIONS.md)
+## 入口
 
-## モック
-- [mock/README.md](/mnt/c/Users/richikawa/Desktop/ichiji_一時的資料/履歴/test-allocation-planner/mock/README.md)
-- [mock/src/app.js](/mnt/c/Users/richikawa/Desktop/ichiji_一時的資料/履歴/test-allocation-planner/mock/src/app.js)
-
-## 補助
-- [claude_review_request.md](/mnt/c/Users/richikawa/Desktop/ichiji_一時的資料/履歴/test-allocation-planner/claude_review_request.md)
+- 仕様全体を把握する: [`docs/README.md`](docs/README.md)
+- 要件から読む: [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md)
+- 画面仕様を見る: [`docs/PAGES/README.md`](docs/PAGES/README.md)
+- モックを確認する: [`mock/README.md`](mock/README.md)
 
 ## 現在の方針
-- 製品名: `テスト配分ノート`
-- リポジトリ名: `test-allocation-planner`
+
+- 製品名は `テスト配分ノート`
 - メニューは `ホーム / テスト / 記録`
 - `おすすめ配分` は独立画面ではなく、`日ごとの学習プラン` 上部の `配分サマリー`
 - 匿名で試せるが、保存系操作の後にログイン提案を出す
