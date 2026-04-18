@@ -22,6 +22,9 @@
 | ファイル | 用途 |
 |---|---|
 | [TIPS.md](TIPS.md) | 画面ごとに出す短い学習豆知識 |
+| [ACCOUNT_MENU.md](ACCOUNT_MENU.md) | ヘッダー右上アカウントメニュー（ログアウト・退会・利用規約・プライバシーポリシー） |
+| [TERMS.md](TERMS.md) | 利用規約ページ |
+| [PRIVACY.md](PRIVACY.md) | プライバシーポリシーページ |
 
 ## 補足
 
