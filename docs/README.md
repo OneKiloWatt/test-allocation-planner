@@ -22,7 +22,7 @@
 | [AUTH.md](PAGES/AUTH.md) | 認証 | ログイン・新規登録 |
 | [HOME.md](PAGES/HOME.md) | ホーム | 状態別メイン画面 |
 | [TEST_CREATE.md](PAGES/TEST_CREATE.md) | テスト作成 | 日程・科目入力 |
-| [CARRY_OVER.md](PAGES/CARRY_OVER.md) | 前回引き継ぎ | 前回データの参照 |
+| [CARRY_OVER.md](PAGES/CARRY_OVER.md) | ~~前回引き継ぎ~~（廃止） | TARGET_SCOREに統合 |
 | [TARGET_SCORE.md](PAGES/TARGET_SCORE.md) | 目標点数入力 | 教科別目標設定 |
 | [PLAN_MODE.md](PAGES/PLAN_MODE.md) | 日程/予定入力 | 自動/手動モード選択 |
 | [ALLOCATION_RESULT.md](PAGES/ALLOCATION_RESULT.md) | 配分サマリー | DAILY_PLAN上部に表示 |
