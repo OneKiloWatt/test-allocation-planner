@@ -1,18 +1,49 @@
-# TestAllocationPlanner
+# テスト配分ノート
 
-テスト前の学習計画を作り、進捗を記録し、結果を振り返るアプリの設計リポジトリ。
-主資料は [`docs/`](docs/README.md)、画面モックは [`mock/`](mock/README.md) にまとめています。
+定期テスト前の学習時間配分計画を作り、進捗を記録し、結果を振り返るWebアプリ。
 
-## 入口
+## フォルダ構成
 
-- 仕様全体を把握する: [`docs/README.md`](docs/README.md)
-- 要件から読む: [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md)
-- 画面仕様を見る: [`docs/PAGES/README.md`](docs/PAGES/README.md)
-- モックを確認する: [`mock/README.md`](mock/README.md)
+```
+test-allocation-planner/
+├── app/        # Next.jsアプリ本体（Pages Router + TypeScript + Tailwind）
+├── docker/     # Dockerfile.dev
+├── docs/       # 仕様書・設計ドキュメント
+├── mock/       # デザインモック（静的HTML）
+├── compose.yml
+├── docker-in.sh
+└── rebuild.sh
+```
 
-## 現在の方針
+## 開発環境の起動
 
-- 製品名は `テスト配分ノート`
-- メニューは `ホーム / テスト / 記録`
-- `おすすめ配分` は独立画面ではなく、`日ごとの学習プラン` 上部の `配分サマリー`
-- 匿名で試せるが、保存系操作の後にログイン提案を出す
+```bash
+# 初回（イメージビルド）
+./rebuild.sh
+
+# コンテナに入って作業
+./docker-in.sh
+
+# 以降は http://localhost:3000 で確認
+```
+
+> Vercelデプロイ時は Root Directory を `app/` に設定すること
+
+## ドキュメント
+
+- 仕様全体: [`docs/README.md`](docs/README.md)
+- 要件: [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md)
+- 画面仕様: [`docs/PAGES/README.md`](docs/PAGES/README.md)
+- デザインモック: [`mock/README.md`](mock/README.md)
+
+## 技術スタック
+
+| 役割 | 採用技術 |
+|---|---|
+| フレームワーク | Next.js 16 (Pages Router) + TypeScript |
+| スタイリング | Tailwind CSS |
+| UIコンポーネント | shadcn/ui |
+| 状態管理 | Zustand |
+| フォーム | React Hook Form + Zod |
+| バックエンド/認証 | Supabase |
+| ホスティング | Vercel |
