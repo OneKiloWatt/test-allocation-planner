@@ -1,33 +1,26 @@
 # Mock
 
-最小の画面遷移確認用モックです。  
-見た目は最低限で、操作の流れだけ確認できます。
+`mock/design/` がメインのデザインモックです。
 
 ## ファイル
-- `src/index.html`
-- `src/styles.css`
-- `src/app.js`
+- `design/Home.html` — エントリポイント
+- `design/app.jsx` — ホーム画面の全5状態 + コンポーネント
+- `design/top.jsx` — トップページ（すぐ試す / ログイン）
+- `design/styles.css` — デザイントークン + レイアウト
 
-## 確認できる画面
-- ホーム
-- テスト作成
-- 前回引き継ぎ
-- 目標・予定入力
-- おすすめ配分
-- 配分確定
-- 進捗登録
-- 進捗反映
-- 結果入力
-- 振り返り
+## 確認できる画面・状態
+- トップページ（TOP）
+- ホーム — テスト未作成 / 準備中 / 進行中 / 完了・結果未入力 / 完了・結果入力済み
+- 保存案内ポップアップ（SavePrompt）
 
-## 起動例
-`mock/` ディレクトリで静的サーバーを立てて `src/index.html` を開く。
-
-例:
+## 起動方法
+`mock/design/` で静的サーバーを立てて `Home.html` を開く。
 
 ```bash
-cd test-allocation-planner/mock
+cd test-allocation-planner/mock/design
 python3 -m http.server 8000
 ```
 
-その後 `http://localhost:8000/src/` を開く。
+`http://localhost:8000/Home.html` を開く。
+
+左パネルから画面・状態を切り替えられます。
