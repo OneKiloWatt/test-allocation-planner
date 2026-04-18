@@ -36,7 +36,7 @@ function shell(title, body, back = true) {
   const topLevel = ["home", "tests", "records"];
   const activeRoot = topLevel.includes(state.route)
     ? state.route
-    : state.route === "review" || state.route === "test-create" || state.route === "carry-over" || state.route === "target-score" || state.route === "plan-mode" || state.route === "daily-plan"
+    : state.route === "review" || state.route === "test-create" || state.route === "target-score" || state.route === "plan-mode" || state.route === "daily-plan"
       ? "tests"
       : state.route === "progress-log" || state.route === "progress-summary" || state.route === "result-entry"
         ? "records"
@@ -67,6 +67,21 @@ function homePage() {
           <h2 class="title">まずは次のテストを作成しましょう</h2>
           <div class="muted">テスト日程と科目を入れると、勉強プランを作れます。</div>
           <button class="button" data-route="test-create">テストを作成する</button>
+        </section>
+      `,
+      false,
+    );
+  }
+
+  if (state.homeState === "planning") {
+    return shell(
+      "ホーム",
+      `
+        <section class="card hero">
+          <div class="eyebrow">準備中</div>
+          <h2 class="title">目標点数と日程を入れましょう</h2>
+          <div class="muted">配分プランを作ると、今日やることが表示されます。</div>
+          <button class="button" data-route="target-score">プランを作る</button>
         </section>
       `,
       false,
@@ -161,6 +176,7 @@ function testsPage() {
         <div class="button-row">
           <button class="button ghost" data-action="show-finished">終了後ホームを確認</button>
           <button class="button ghost" data-action="show-empty">初回空状態を確認</button>
+          <button class="button ghost" data-action="show-planning">準備中ホームを確認</button>
         </div>
       </section>
     `,
@@ -254,34 +270,7 @@ function testCreatePage() {
         </div>
         <div class="footer-actions">
           <button class="button secondary">日程を追加</button>
-          <button class="button" data-route="carry-over">前回を引き継ぐ</button>
-        </div>
-      </section>
-    `,
-  );
-}
-
-function carryOverPage() {
-  return shell(
-    "前回引き継ぎ",
-    `
-      <section class="card">
-        <div class="eyebrow">候補</div>
-        <strong>${state.previousExam.term}</strong>
-        <div class="subject-grid">
-          ${state.previousExam.subjects
-            .map(
-              (s) => `
-              <div class="stat">
-                <span>${s.name}</span>
-                <span class="muted">${s.hours}時間 / ${s.score}点</span>
-              </div>`,
-            )
-            .join("")}
-        </div>
-        <div class="button-row">
-          <button class="button" data-route="target-score">科目 + 前回結果を引き継ぐ</button>
-          <button class="button ghost" data-route="target-score">引き継がずに進む</button>
+          <button class="button" data-route="target-score">目標点数を入れる</button>
         </div>
       </section>
     `,
@@ -605,7 +594,6 @@ function render() {
     records: recordsPage,
     "test-detail-active": testDetailActivePage,
     "test-create": testCreatePage,
-    "carry-over": carryOverPage,
     "target-score": targetScorePage,
     "plan-mode": planModePage,
     "daily-plan": dailyPlanPage,
@@ -635,6 +623,14 @@ function render() {
   app.querySelectorAll("[data-action='show-empty']").forEach((el) => {
     el.addEventListener("click", () => {
       state.homeState = "empty";
+      state.history.push(state.route);
+      state.route = "home";
+      render();
+    });
+  });
+  app.querySelectorAll("[data-action='show-planning']").forEach((el) => {
+    el.addEventListener("click", () => {
+      state.homeState = "planning";
       state.history.push(state.route);
       state.route = "home";
       render();
