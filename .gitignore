@@ -1,14 +1,20 @@
 # dependencies
 node_modules/
+app/node_modules/
 
 # Next.js build output
 .next/
+app/.next/
 out/
+app/out/
 
 # env files
 .env
 .env.local
 .env.*.local
+app/.env
+app/.env.local
+app/.env.*.local
 
 # misc
 .DS_Store
