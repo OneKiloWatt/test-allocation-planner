@@ -272,82 +272,134 @@ flowchart TD
 | `updated_at` | `timestamptz` | はい | 最終更新日時 | `2026-04-22T10:05:00Z` | 変更追跡用 |
 
 ## Test
-- id
-- version
-- name
-- term_type
-  - 中間 / 期末 / その他
-- start_date
-- end_date
-- schedule_days[]
-- status
-  - planning / active / finished / archived
-- planning_mode
-  - auto / manual
+- `id`
+  - テストを一意に識別するID
+- `version`
+  - 保存形式や競合制御に使う版番号
+- `name`
+  - ユーザーに表示するテスト名
+- `term_type`
+  - テスト種別
+  - `中間 / 期末 / その他`
+- `start_date`
+  - テスト開始日
+- `end_date`
+  - テスト終了日
+- `schedule_days[]`
+  - 勉強可能日や日別条件を持つ補助データ
+- `status`
+  - テストの進行状態
+  - `planning / active / finished / archived`
+- `planning_mode`
+  - 学習プランの作り方
+  - `auto / manual`
 
 ## ScheduleDay
-- date
-- subjects[]
+- `date`
+  - その日付
+- `subjects[]`
+  - その日に勉強候補として扱う科目一覧
 
 ## Subject
-- subject_id
-- subject_name
-- normalized_name
-- previous_score
-- previous_study_minutes
-- target_score
+- `subject_id`
+  - 内部処理で使う安定した科目ID
+- `subject_name`
+  - 画面表示用の科目名
+- `normalized_name`
+  - 表記ゆれ吸収後の検索用名称
+- `previous_score`
+  - 前回テストの点数
+- `previous_study_minutes`
+  - 前回その科目に使った勉強時間
+- `target_score`
+  - 今回目標にする点数
 
 ## StudyPlan
-- subject_id
-- recommended_minutes
-- recommended_ratio
-- reason
+- `subject_id`
+  - どの科目の配分かを示すID
+- `recommended_minutes`
+  - その科目に推奨する総勉強時間
+- `recommended_ratio`
+  - 全体勉強時間に対する配分比率
+- `reason`
+  - その配分になった理由の説明文
 
 ## UserAvailability
-- weekday_club_minutes
-- weekday_no_club_minutes
-- weekend_minutes
-- club_days[]
-- study_start_date
-- pre_exam_rest_mode
-  - true / false
+- `weekday_club_minutes`
+  - 部活がある平日に使える勉強時間
+- `weekday_no_club_minutes`
+  - 部活がない平日に使える勉強時間
+- `weekend_minutes`
+  - 土日に使える勉強時間
+- `club_days[]`
+  - 部活がある曜日一覧
+- `study_start_date`
+  - 勉強開始日
+- `pre_exam_rest_mode`
+  - 前日に休み寄せを行うか
+  - `true / false`
 
 ## ProgressLog
-- id
-- test_id
-- exam_subject_id
-- logged_minutes
-- memo
-- logged_date
-- logged_at
+- `id`
+  - 実績ログの識別子
+- `test_id`
+  - どのテストに対する記録か
+- `exam_subject_id`
+  - どの科目に対する記録か
+- `logged_minutes`
+  - 実際に勉強した時間
+- `memo`
+  - 補足メモ
+- `logged_date`
+  - どの日の実績として扱うか
+- `logged_at`
+  - 記録操作を行った正確な時刻
 
 ## DailyPlan
-- id
-- exam_id
-- exam_subject_id
-- date
-- planned_minutes
-- source
-  - auto / manual
+- `id`
+  - 日次プラン行の識別子
+- `exam_id`
+  - どのテストの日程か
+- `exam_subject_id`
+  - どの科目の行か
+- `date`
+  - 実施予定日
+- `planned_minutes`
+  - その日に予定している勉強時間
+- `source`
+  - 自動生成か手動追加か
+  - `auto / manual`
 
 ## ExamResult
-- id
-- exam_subject_id
-- actual_score
-- actual_study_minutes
-- note
+- `id`
+  - 結果行の識別子
+- `exam_subject_id`
+  - どの科目の結果か
+- `actual_score`
+  - 実際に取れた点数
+- `actual_study_minutes`
+  - 実際にその科目へ使った勉強時間
+- `note`
+  - 振り返りメモ
 
 ## Migration
-- from_version
-- to_version
-- migrated_at
+- `from_version`
+  - 変換前の版番号
+- `to_version`
+  - 変換後の版番号
+- `migrated_at`
+  - migration を実行した日時
 
 ## SpecialCase（MVPでは未実装）
-- date
-- override_minutes
-- override_mode
-  - none / less / more / no_club
-- memo
+- `date`
+  - 例外日の日付
+- `override_minutes`
+  - 通常ルールを上書きする勉強可能時間
+- `override_mode`
+  - どの種類の例外か
+  - `none / less / more / no_club`
+- `memo`
+  - 例外理由のメモ
 
 ## 計算に使う入力
 - 前回点数
