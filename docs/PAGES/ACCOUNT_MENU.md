@@ -52,9 +52,10 @@
 
 ### ステップ4: サーバーサイド削除処理
 - Next.js API Route または Supabase Edge Function で実行（`service_role` 権限が必要）
-- 削除順: `progress_logs` → `daily_plans` → `study_plans` → `exam_results` → `exam_subjects` → `availability_rules` → `exams` → `auth.users` → global sign out
+- DB 側の学習データ削除は `exams.user_id` を起点に行い、子テーブルの削除は `ON DELETE CASCADE` を正とする
+- `auth.users` の削除は DB 側削除完了後に行う
 - 理由: 先に認証を消すと DB クリーンアップ権限を失うため
-- 失敗時: 完全ロールバックより「失敗地点の明確化」を優先する
+- 失敗時:
   - DB 削除済み・認証削除失敗の場合は「ログインは残るがデータは空」の状態として再実行可能にする
   - 逆（認証削除済み・DB 残存）は避ける
 

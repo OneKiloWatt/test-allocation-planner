@@ -34,6 +34,8 @@
 - ここでは `目標をどこに置くか` だけ考えさせる
 - 前回データは参考であり、強制ではない
 - 日程や部活設定は混ぜない
+- `次へ` 押下時に、`target_score` とあわせて current exam の `previous_score` / `previous_study_minutes` をスナップショットとして保存する
+- 保存するのは current exam 側の参照値であり、参照元リンクまでは MVP で保持しない
 
 ## エラー状態
 | 場面 | 挙動 |
