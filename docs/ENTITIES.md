@@ -58,8 +58,8 @@
 - 今回テストに向けた、教科ごとの目安時間
 
 持つもの:
-- exam_id
-- subject_id
+- exam_subject_id
+  - ExamSubject への FK。exam_id + subject_id は exam_subject_id 経由で参照する
 - planned_minutes
 - planned_ratio
 - reason
