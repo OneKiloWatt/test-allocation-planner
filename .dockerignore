@@ -2,6 +2,7 @@ node_modules
 .next
 .env
 .env.*
+docker/supabase/.env.local
 .git
 .gitignore
 npm-debug.log*
