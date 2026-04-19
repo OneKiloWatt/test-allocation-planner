@@ -15,6 +15,7 @@ app/out/
 app/.env
 app/.env.local
 app/.env.*.local
+docker/supabase/.env.local
 
 # misc
 .DS_Store

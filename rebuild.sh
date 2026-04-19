@@ -1,3 +1,11 @@
-docker compose down
-docker compose build
-docker compose up -d
+#!/usr/bin/env bash
+set -eu
+
+if [ ! -f docker/supabase/.env.local ]; then
+  cp docker/supabase/.env.example docker/supabase/.env.local
+  echo "Created docker/supabase/.env.local from docker/supabase/.env.example"
+fi
+
+docker compose --env-file docker/supabase/.env.local down
+docker compose --env-file docker/supabase/.env.local build app
+docker compose --env-file docker/supabase/.env.local up -d --wait

@@ -1,6 +1,5 @@
 services:
   app:
-    container_name: react-app
     build:
       context: .
       dockerfile: docker/Dockerfile.dev
@@ -18,11 +17,178 @@ services:
       - -c
       - |
         if [ -f package.json ]; then
+          if [ ! -x node_modules/.bin/next ]; then
+            npm install
+          fi
           npm run dev
         else
           echo "package.json not found. Run create-next-app inside the container first."
           tail -f /dev/null
         fi
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - node -e "fetch('http://127.0.0.1:3000').then((r)=>{if(!r.ok) throw new Error(String(r.status))}).catch((e)=>{console.error(e); process.exit(1)})"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  db:
+    image: ${SUPABASE_DB_IMAGE:-supabase/postgres:15.8.1.085}
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in docker/supabase/.env.local}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      JWT_SECRET: ${JWT_SECRET:?set in docker/supabase/.env.local}
+    ports:
+      - "${SUPABASE_DB_PORT:-54322}:5432"
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      - ./docker/supabase/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -h localhost -U postgres -d ${POSTGRES_DB:-postgres}
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kong:
+    image: ${SUPABASE_KONG_IMAGE:-kong:3.6}
+    depends_on:
+      auth:
+        condition: service_started
+      rest:
+        condition: service_started
+      realtime:
+        condition: service_started
+      storage:
+        condition: service_started
+      meta:
+        condition: service_started
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+    ports:
+      - "${SUPABASE_API_PORT:-54321}:8000"
+    volumes:
+      - ./docker/supabase/kong.yml:/etc/kong/kong.yml:ro
+
+  auth:
+    image: ${SUPABASE_AUTH_IMAGE:-supabase/gotrue:v2.186.0}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      GOTRUE_SITE_URL: ${SUPABASE_SITE_URL:-http://localhost:3000}
+      GOTRUE_URI_ALLOW_LIST: ${SUPABASE_SITE_URL:-http://localhost:3000}
+      GOTRUE_DISABLE_SIGNUP: ${GOTRUE_DISABLE_SIGNUP:-false}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET:?set in docker/supabase/.env.local}
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://${SUPABASE_DB_USER:-supabase_admin}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}?search_path=auth
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${GOTRUE_EXTERNAL_EMAIL_ENABLED:-false}
+      GOTRUE_MAILER_AUTOCONFIRM: ${GOTRUE_MAILER_AUTOCONFIRM:-true}
+
+  rest:
+    image: ${SUPABASE_REST_IMAGE:-postgrest/postgrest:v14.8}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://${SUPABASE_DB_USER:-supabase_admin}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:?set in docker/supabase/.env.local}
+
+  realtime:
+    image: ${SUPABASE_REALTIME_IMAGE:-supabase/realtime:v2.76.5}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-postgres}
+      DB_USER: ${SUPABASE_DB_USER:-supabase_admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?set in docker/supabase/.env.local}
+      APP_NAME: ${SUPABASE_REALTIME_APP_NAME:-supabase-realtime}
+      ERL_AFLAGS: ${SUPABASE_REALTIME_ERL_AFLAGS:--proto_dist inet_tcp}
+      PORT: 4000
+      API_JWT_SECRET: ${JWT_SECRET:?set in docker/supabase/.env.local}
+      SECRET_KEY_BASE: ${REALTIME_SECRET_KEY_BASE:-realtime-secret-key-base-32-chars}
+      ERLANG_COOKIE: ${REALTIME_ERLANG_COOKIE:-realtime-erlang-cookie}
+      DB_AFTER_CONNECT_QUERY: SET search_path TO _realtime
+
+  storage:
+    image: ${SUPABASE_STORAGE_IMAGE:-supabase/storage-api:v1.48.26}
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    environment:
+      ANON_KEY: ${ANON_KEY:?set in docker/supabase/.env.local}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY:?set in docker/supabase/.env.local}
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: ${JWT_SECRET:?set in docker/supabase/.env.local}
+      DATABASE_URL: postgres://${SUPABASE_DB_USER:-supabase_admin}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
+      FILE_SIZE_LIMIT: ${STORAGE_FILE_SIZE_LIMIT:-52428800}
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: ${STORAGE_TENANT_ID:-stub}
+      REGION: ${STORAGE_REGION:-local}
+      GLOBAL_S3_BUCKET: ${STORAGE_BUCKET:-local}
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+    volumes:
+      - supabase-storage-data:/var/lib/storage
+
+  meta:
+    image: ${SUPABASE_META_IMAGE:-supabase/postgres-meta:v0.96.3}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB:-postgres}
+      PG_META_DB_USER: ${SUPABASE_DB_USER:-supabase_admin}
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD:?set in docker/supabase/.env.local}
+
+  studio:
+    image: ${SUPABASE_STUDIO_IMAGE:-supabase/studio:2026.04.08-sha-205cbe7}
+    depends_on:
+      kong:
+        condition: service_started
+      meta:
+        condition: service_started
+    environment:
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in docker/supabase/.env.local}
+      DEFAULT_ORGANIZATION_NAME: ${STUDIO_ORGANIZATION_NAME:-Local}
+      DEFAULT_PROJECT_NAME: ${STUDIO_PROJECT_NAME:-test-allocation-planner}
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:54321}
+      SUPABASE_ANON_KEY: ${ANON_KEY:?set in docker/supabase/.env.local}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY:?set in docker/supabase/.env.local}
+      AUTH_JWT_SECRET: ${JWT_SECRET:?set in docker/supabase/.env.local}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - node -e "const h=require('os').hostname(); fetch('http://' + h + ':3000/project/default').then((r)=>{if(!r.ok) throw new Error(String(r.status))}).catch((e)=>{console.error(e); process.exit(1)})"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${SUPABASE_STUDIO_PORT:-54323}:3000"
 
 volumes:
   node_modules:
+  supabase-db-data:
+  supabase-storage-data:
