@@ -35,6 +35,117 @@ Phase 17 → Phase 20
 3. 共通レイアウト（ヘッダー・ボトムナビ・`<Layout>` コンポーネント）
 4. Tailwind テーマ設定（DESIGN.md のカラー・フォント）
 
+### Phase 0 追加仕様: ルート分類
+
+| 分類 | 対象 | アクセス条件 | 遷移ルール |
+| --- | --- | --- | --- |
+| `publicRoutes` | 認証前の入口・法務ページ | 誰でも表示可 | ログイン済みでも表示可。アプリ利用中の導線を邪魔しないため、自動リダイレクトはしない |
+| `guestOnlyRoutes` | 認証開始ページ | 未ログイン時のみ表示可 | ログイン済みユーザーが開いた場合は `HOME` へ `replace` 遷移する |
+| `authenticatedRoutes` | 学習管理アプリ本体 | 「ログイン済み」または「ゲスト開始済み」のアプリセッションが必要 | セッションなしで直接アクセスした場合は `TOP` へ戻す。必要に応じて `AUTH` への導線を表示する |
+
+| 画面 | ルート分類 | 備考 |
+| --- | --- | --- |
+| TOP | `publicRoutes` | LP兼アプリ入口 |
+| HOME | `authenticatedRoutes` | ゲスト開始後も利用可 |
+| テスト作成フロー | `authenticatedRoutes` | ゲスト開始済みまたはログイン済みが前提 |
+| TARGET_SCORE | `authenticatedRoutes` | 対象テストの文脈が必要 |
+| DAILY_PLAN | `authenticatedRoutes` | 学習プラン生成後の主画面 |
+| PROGRESS_LOG | `authenticatedRoutes` | 記録対象テストが必要 |
+| RESULT_ENTRY | `authenticatedRoutes` | 対象テストの結果入力 |
+| REVIEW | `authenticatedRoutes` | 対象テストの振り返り |
+| AUTH | `guestOnlyRoutes` | ログイン/新規登録。ログイン済みでは開かない |
+| TERMS | `publicRoutes` | 法務ページ |
+| PRIVACY | `publicRoutes` | 法務ページ |
+
+### Phase 0 追加仕様: ゲスト開始済みセッション判定
+
+- `ゲスト開始済み` は、localStorage 上の `guestSession` 名前空間にあるセッションメタデータを判定対象とする
+- 判定に使う必須項目は `sessionId` `startedAt` `expiresAt` `storageVersion` とし、4項目が揃い、形式検証を通過した場合のみ有効セッション候補として扱う
+- 追加で、ゲスト保存領域に `activeExamId` または 1件以上のゲストデータがある場合は `開始済みの利用痕跡あり` とみなすが、最終的なアクセス可否は `guestSession` の妥当性を優先する
+- `authenticatedRoutes` の表示前に毎回 `guestSession` を読み、必須項目欠落・型不一致・日付不正・期限切れのいずれかがあれば `未開始` と判定する
+- セッションが未開始または消失している場合は保護画面を描画せず、`TOP` へ `replace` 遷移する
+- 対象テストIDなど画面文脈だけが残っていて `guestSession` が消えている場合も、復元は試みず `TOP` へ戻す
+- localStorage 改ざんや不正値を検出した場合は、その値を信用せず、該当する `guestSession` 名前空間を破棄して `TOP` へ戻す
+- 改ざん検出は例外扱いにせず、ユーザー向けには責めない案内に留める
+  - 例: `保存データを確認できなかったため、最初の画面に戻りました`
+- ゲストセッションの有効期限は `startedAt` から 30日を上限とする
+- 有効期限内にゲスト利用を継続した場合は、保存系操作の成功時に `expiresAt` を 30日後へローリング延長してよい
+- 期限切れセッションは自動失効とし、期限超過後は `authenticatedRoutes` へ入れない
+- 期限切れ時の削除方針は即時物理削除を必須にせず、少なくともアクセス判定上は無効化する。実装では起動時または遷移時に関連 localStorage を掃除してよい
+
+### Phase 0 追加仕様: ログアウト後のキャッシュ制御
+
+- ログアウト時は認証ユーザーに紐づくメモリ上の状態、画面キャッシュ、再利用可能な取得結果を即時破棄する
+- ログアウト完了後は `TOP` へ `replace` 遷移し、ブラウザバックで直前の認証画面に戻れない遷移を基本とする
+- `authenticatedRoutes` は表示前にセッション有無を毎回判定し、セッション消失後は保護画面の内容を一瞬でも再表示しない
+- ゲストデータを残す仕様を採る場合でも、ログインユーザー固有データと混在させない。保存領域の名前空間を分け、ログアウトで認証領域のみ確実に破棄する
+
+### Phase 0 追加仕様: Layout・Header バリアント
+
+#### Layout バリアント
+
+| Layout | 用途 | 構成 |
+| --- | --- | --- |
+| `marketing` | `TOP` | ファーストビュー優先。ヘッダーは最小、ボトムナビなし |
+| `app` | 日常利用の主画面 | ヘッダー + コンテンツ + ボトムナビ |
+| `form` | 入力集中が必要な画面 | ヘッダー + コンテンツ。ボトムナビなし |
+| `legal` | 利用規約・プライバシー | 戻る導線のみ。余計なCTAを置かない |
+
+#### Header バリアント
+
+| Header | 用途 | 構成 |
+| --- | --- | --- |
+| `TopHeader` | `TOP` | ロゴのみ |
+| `AppHeader` | アプリ主画面 | 画面タイトル + アカウント導線 |
+| `BackHeader` | フォーム・法務 | 戻る導線を最優先。必要なら短いタイトルを併記 |
+
+| 画面 | Layout | Header | ボトムナビ |
+| --- | --- | --- | --- |
+| TOP | `marketing` | `TopHeader` | 非表示 |
+| HOME | `app` | `AppHeader` | 表示 |
+| テスト作成フロー | `form` | `BackHeader` | 非表示 |
+| TARGET_SCORE | `form` | `BackHeader` | 非表示 |
+| DAILY_PLAN | `app` | `AppHeader` | 表示 |
+| PROGRESS_LOG | `form` | `BackHeader` | 非表示 |
+| RESULT_ENTRY | `form` | `BackHeader` | 非表示 |
+| REVIEW | `app` | `AppHeader` | 表示 |
+| AUTH | `form` | `BackHeader` | 非表示 |
+| TERMS | `legal` | `BackHeader` | 非表示 |
+| PRIVACY | `legal` | `BackHeader` | 非表示 |
+
+#### ボトムナビの状態定義
+
+- アクティブ状態は「現在のルートが所属する機能セクション」と一致するタブにのみ付与する
+- `HOME` 表示時は `Home` タブをアクティブにする
+- `DAILY_PLAN` 表示時は `Plan` タブをアクティブにする
+- `REVIEW` 表示時は `Review` タブをアクティブにする
+- `PROGRESS_LOG` は入力完了を優先する `form` レイアウトのためボトムナビを非表示にし、タブのアクティブ状態は持たない
+- `TOP`、`AUTH`、テスト作成フロー、`TARGET_SCORE`、`RESULT_ENTRY`、`TERMS`、`PRIVACY` ではボトムナビを出さない
+- 破壊的確認ダイアログやボトムシート表示中も、誤タップ防止のため underlying navigation は操作不能にする
+
+### Phase 0 追加仕様: 未保存確認
+
+#### 未保存確認が必要な画面
+
+- テスト作成フロー
+- TARGET_SCORE
+- PLAN_MODE の入力フォーム
+- PROGRESS_LOG
+- RESULT_ENTRY
+
+#### 判定条件
+
+- 初期表示値から変更がなく、保存もしていない場合は確認を出さずに離脱してよい
+- 1項目でも変更があり、最新状態が保存されていない場合は、戻る・閉じる・別ルート遷移の前に確認を出す
+- 保存完了直後、または保存済みデータを再読み込みした直後は dirty 状態を解除する
+- クエリ変更のみで同一画面の表示を更新する場合は、フォーム値に変更がなければ確認不要とする
+
+#### 文言方針
+
+- 中高生に伝わる短さを優先し、責めない・脅さない表現にする
+- 例: `まだ保存していない変更があります。ページを離れますか？`
+- ボタンは `このまま離れる` / `編集を続ける` のように、結果がすぐ分かる文言に統一する
+
 ---
 
 ## Phase 1 — 型 & Zod スキーマ

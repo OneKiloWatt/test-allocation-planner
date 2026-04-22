@@ -145,3 +145,136 @@
 - モーダル: 破壊的操作の確認のみ
   - 例: テスト削除の確認
 - ルール: 「短い入力はボトムシート、長いフォームはページ遷移、モーダルは破壊的操作専用」
+
+## デザイントークン完了条件
+- MVP のカラートークン最小セットとして `background` `surface` `text` `muted` `border` `primary` `primary-foreground` `destructive` `warning` を定義する
+- 状態色として `active tab` `inactive tab` `muted text` `success` `caution` `destructive` を定義し、文言やアイコンの意味とセットで使い分ける
+- ダークモードは MVP の対象外とし、ライトテーマの読みやすさと一貫性を先に固める
+- トークンは Tailwind の custom color と CSS 変数の両方で参照できる状態を完了条件とする
+
+## デザイントークン運用ルール
+- source of truth は `globals.css` の CSS 変数とする
+- Tailwind から使う値は `theme.extend` 経由で CSS 変数を参照し、アプリコード側で直接色値を再定義しない
+- カラー、余白、寸法ともに「先に CSS 変数を定義し、その別名を Tailwind に公開する」順で運用する
+- 一時対応であっても `tailwind.config` に16進色や固定寸法値を直書きして二重定義しない
+- コンポーネント個別 CSS や JSX の `style` 属性へ色値を直書きしない。例外が必要な場合は先にトークン化する
+
+### 命名規則
+- CSS 変数は `--color-*` `--size-*` `--space-*` の接頭辞で用途を明示する
+- Tailwind 側の公開名は CSS 変数名の接頭辞を外した kebab-case にそろえる
+- 対応ルール:
+  - `--color-background` → `background`
+  - `--color-primary-foreground` → `primary-foreground`
+  - `--space-screen-x` → `px-screen`
+  - `--size-header-mobile` → `h-header-mobile`
+- 状態トークンも同じ対応規則に統一し、実装ごとの別名を増やさない
+
+### 二重定義防止ルール
+- `tailwind.config` の `extend.colors` `extend.spacing` `extend.height` `extend.maxWidth` には CSS 変数参照だけを書く
+- Figma や仕様書から値を更新するときは、`globals.css` の変数値を先に直し、Tailwind 側は参照名の追加・削除が必要な場合にだけ更新する
+- 同じ意味のトークンを `surface` と `cardBg` のように複数名で増やさない
+- レビュー時は「CSS 変数未定義の Tailwind token」「Tailwind 未公開の独自 CSS 変数」「直書き色値」の3点を確認対象にする
+
+## レイアウト寸法トークン
+- スマホファーストの基準幅は最大幅 390px とする
+- 画面レイアウトの基準値は次を採用する
+  - ヘッダー高（スマホ基準）: `56px`
+  - ボトムナビ高: `64px`
+  - ボトムナビ下部余白: `env(safe-area-inset-bottom)` を別加算する
+  - 画面左右余白: `16px`
+  - コンテンツ最大幅: `390px`
+  - カード間隔: `12px`
+  - セクション間隔: `24px`
+- ボトムナビを持つ画面では、主コンテンツの下側余白に `64px + env(safe-area-inset-bottom)` 以上を確保する
+- カード内余白の基本値は左右上下とも `16px` を起点とし、情報量が多い場合のみ縮小を検討する
+- フォーム画面、ホーム画面、レビュー画面で寸法ルールを変えすぎず、上記トークンの組み合わせで収める
+
+### 寸法トークンの公開例
+
+```css
+/* globals.css */
+:root {
+  --size-header-mobile: 56px;
+  --size-bottom-nav: 64px;
+  --space-screen-x: 16px;
+  --size-content-max: 390px;
+  --space-card-gap: 12px;
+  --space-section-gap: 24px;
+}
+```
+
+```ts
+// tailwind.config.ts
+export default {
+  theme: {
+    extend: {
+      spacing: {
+        "px-screen": "var(--space-screen-x)",
+        "card-gap": "var(--space-card-gap)",
+        "section-gap": "var(--space-section-gap)",
+      },
+      height: {
+        "header-mobile": "var(--size-header-mobile)",
+        "bottom-nav": "var(--size-bottom-nav)",
+      },
+      maxWidth: {
+        content: "var(--size-content-max)",
+      },
+    },
+  },
+}
+```
+
+### 役割ごとの色の考え方
+- `background`: 画面全体の地色。白すぎず、ノート感のあるクリーム
+- `surface`: カードやシートの面
+- `text`: 本文と主要ラベル
+- `muted`: 補助背景や弱い区切り
+- `border`: 入力枠線とカード境界
+- `primary`: テラコッタ基調の主要CTA
+- `primary-foreground`: `primary` 上の文字色
+- `warning`: 中立な注意。締切煽りに見えない黄土寄り
+- `destructive`: 削除など破壊的操作専用
+
+### 状態色
+
+| 状態 | 用途 |
+| --- | --- |
+| `active tab` | 現在地のタブ。`primary` 系を使う |
+| `inactive tab` | 非選択タブ。主張しない茶灰色 |
+| `muted text` | 補助説明、日付、注釈 |
+| `success` | 記録完了、達成表示 |
+| `caution` | 未入力、要確認、軽い注意 |
+| `destructive` | 削除、取り消し不能操作、重大エラー |
+
+### Tailwind custom color 定義例
+
+```ts
+// tailwind.config.ts
+export default {
+  theme: {
+    extend: {
+      colors: {
+        background: "#F7F1E8",
+        surface: "#FFF9F2",
+        text: "#3F342C",
+        muted: "#E8DDD0",
+        border: "#D7C7B4",
+        primary: "#D67A52",
+        "primary-foreground": "#FFF7F0",
+        warning: "#D9A441",
+        destructive: "#B85C38",
+        "active-tab": "#C96E46",
+        "inactive-tab": "#8F7A69",
+        "muted-text": "#7D6C5F",
+        success: "#6F9B6E",
+        caution: "#C6923A",
+      },
+    },
+  },
+}
+```
+
+- `background` と `surface` の差は弱めにして、まぶしさを抑える
+- `primary` はボタン・強調ラベルまでに留め、画面全体を暖色で埋めない
+- `destructive` は赤寄りにしすぎず、通常導線の `primary` と明確に区別する
