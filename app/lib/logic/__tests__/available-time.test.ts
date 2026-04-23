@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { AvailabilityRule } from "../../schemas";
-import { getDailyAvailableMinutes } from "../available-time";
+import { getDailyAvailableMinutes, getStudyDays } from "../available-time";
 
 const baseRule: AvailabilityRule = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -37,5 +37,19 @@ describe("getDailyAvailableMinutes", () => {
     const rule: AvailabilityRule = { ...baseRule, pre_exam_rest_mode: true };
 
     expect(getDailyAvailableMinutes("2024-09-09", rule, ["2024-09-10"])).toBe(120);
+  });
+});
+
+describe("getStudyDays", () => {
+  it("returns days from the study start date through the end date and skips exam days", () => {
+    expect(getStudyDays("2024-09-01", "2024-09-04", baseRule, ["2024-09-03"])).toEqual([
+      { date: "2024-09-01", availableMinutes: 180 },
+      { date: "2024-09-02", availableMinutes: 60 },
+      { date: "2024-09-04", availableMinutes: 60 },
+    ]);
+  });
+
+  it("returns an empty array when the date range is invalid", () => {
+    expect(getStudyDays("2024-09-05", "2024-09-04", baseRule, [])).toEqual([]);
   });
 });

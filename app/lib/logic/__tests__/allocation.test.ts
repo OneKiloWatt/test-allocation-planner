@@ -90,4 +90,64 @@ describe("allocate", () => {
     expect(result.length).toBeGreaterThan(1);
     expect(new Set(result.map((plan) => plan.date)).size).toBeGreaterThanOrEqual(1);
   });
+
+  it("respects study_start_date when deciding which days can receive plans", () => {
+    const shortMinutesRule: AvailabilityRule = {
+      ...rule,
+      weekday_club_minutes: 20,
+      weekday_no_club_minutes: 20,
+      weekend_minutes: 20,
+    };
+    const earlyStartResult = allocate(
+      [subject("math", 80)],
+      shortMinutesRule,
+      {
+        ...baseExam,
+        start_date: "2024-09-05",
+        end_date: "2024-09-05",
+        schedule_days: [{ date: "2024-09-05", subjects: ["math"] }],
+      },
+    );
+    const lateStartResult = allocate(
+      [subject("math", 80)],
+      { ...shortMinutesRule, study_start_date: "2024-09-04" },
+      {
+        ...baseExam,
+        start_date: "2024-09-05",
+        end_date: "2024-09-05",
+        schedule_days: [{ date: "2024-09-05", subjects: ["math"] }],
+      },
+    );
+
+    expect(earlyStartResult.reduce((sum, plan) => sum + plan.planned_minutes, 0)).toBe(60);
+    expect(lateStartResult.reduce((sum, plan) => sum + plan.planned_minutes, 0)).toBe(10);
+    expect(new Set(lateStartResult.map((plan) => plan.date))).toEqual(new Set(["2024-09-04"]));
+  });
+
+  it("uses pre_exam_rest_mode when allocating club-day minutes in the final week", () => {
+    const finalWeekExam: Exam = {
+      ...baseExam,
+      start_date: "2024-09-10",
+      end_date: "2024-09-10",
+      schedule_days: [{ date: "2024-09-10", subjects: ["math"] }],
+    };
+    const finalWeekRule: AvailabilityRule = {
+      ...rule,
+      study_start_date: "2024-09-09",
+      weekday_club_minutes: 20,
+      weekday_no_club_minutes: 40,
+      weekend_minutes: 0,
+      club_days: ["mon"],
+      pre_exam_rest_mode: false,
+    };
+    const withoutRestMode = allocate([subject("math", 80)], finalWeekRule, finalWeekExam);
+    const withRestMode = allocate(
+      [subject("math", 80)],
+      { ...finalWeekRule, pre_exam_rest_mode: true },
+      finalWeekExam,
+    );
+
+    expect(withoutRestMode.reduce((sum, plan) => sum + plan.planned_minutes, 0)).toBe(10);
+    expect(withRestMode.reduce((sum, plan) => sum + plan.planned_minutes, 0)).toBe(20);
+  });
 });
