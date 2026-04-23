@@ -411,11 +411,17 @@ export default function HomePage() {
   const repository = useRepository();
   const activeExamId = useExamStore((state) => state.activeExamId);
   const setActiveExamId = useExamStore((state) => state.setActiveExamId);
+  const authUser = useExamStore((state) => state.authUser);
+  const isAuthLoading = useExamStore((state) => state.isAuthLoading);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [viewState, setViewState] = useState<ReturnType<typeof buildHomeViewState>["viewState"] | null>(null);
 
   useEffect(() => {
-    if (!hasValidGuestSession()) {
+    if (isAuthLoading) {
+      return;
+    }
+
+    if (authUser == null && !hasValidGuestSession()) {
       void router.replace(routePaths.top());
       return;
     }
@@ -461,7 +467,7 @@ export default function HomePage() {
     return () => {
       isMounted = false;
     };
-  }, [repository, router, setActiveExamId]);
+  }, [authUser, isAuthLoading, repository, router, setActiveExamId]);
 
   const bottomNavItems = useMemo(
     () =>
@@ -560,7 +566,7 @@ export default function HomePage() {
   return (
     <Layout
       variant="app"
-      header={<AppHeader title="ホーム" subtitle="ゲスト利用中" />}
+      header={<AppHeader title="ホーム" subtitle={authUser == null ? "ゲスト利用中" : undefined} />}
       bottomNav={<BottomNav items={bottomNavItems} pathname={routePaths.home()} />}
     >
       {content}
