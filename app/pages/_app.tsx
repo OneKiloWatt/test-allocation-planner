@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 
 import { routePaths } from "@/components/layout";
 import { getRouteAccess } from "@/components/layout/routes";
+import { runGuestMigration } from "@/lib/run-guest-migration";
 import { supabase } from "@/lib/supabase";
 import { useExamStore } from "@/stores";
 
@@ -37,6 +38,10 @@ export default function App({ Component, pageProps }: AppProps) {
         clearActiveExam();
         setAuthLoading(false);
         return;
+      }
+
+      if (event === "SIGNED_IN" && session?.access_token != null) {
+        void runGuestMigration(session.access_token);
       }
 
       setAuthUser(session?.user ?? null);

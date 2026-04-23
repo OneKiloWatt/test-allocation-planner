@@ -143,3 +143,11 @@ export function startGuestSession() {
   storage.setItem(GUEST_SESSION_STORAGE_KEY, JSON.stringify(next));
   return next;
 }
+
+export function clearGuestSessionStorage() {
+  const storage = getLocalStorage();
+  if (storage == null) {
+    return;
+  }
+  clearGuestSession(storage);
+}
