@@ -11,9 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { hasValidGuestSession } from "@/lib/guest-session";
 import { allocate } from "@/lib/logic/allocation";
+import { supabase } from "@/lib/supabase";
 import type { AvailabilityRule, Exam, StudyPlan } from "@/lib/schemas";
 import { cn, generateUuid } from "@/lib/utils";
-import { useRepository } from "@/stores";
+import { useExamStore, useRepository } from "@/stores";
 
 const clubDayOptions = [
   { value: "mon", label: "月" },
@@ -49,6 +50,8 @@ function buildDefaultValues(today: string): AutoFormInput {
 export default function PlanModePage() {
   const router = useRouter();
   const repository = useRepository();
+  const authUser = useExamStore((state) => state.authUser);
+  const isAuthLoading = useExamStore((state) => state.isAuthLoading);
   const [isReady, setIsReady] = useState(false);
   const [examId, setExamId] = useState<string | null>(null);
   const [exam, setExam] = useState<Exam | null>(null);
@@ -65,11 +68,11 @@ export default function PlanModePage() {
   const { control, register, handleSubmit, reset, watch } = form;
 
   useEffect(() => {
-    if (!router.isReady) {
+    if (!router.isReady || isAuthLoading) {
       return;
     }
 
-    if (!hasValidGuestSession()) {
+    if (authUser == null && !hasValidGuestSession()) {
       void router.replace(routePaths.top());
       return;
     }
@@ -122,7 +125,7 @@ export default function PlanModePage() {
     return () => {
       isMounted = false;
     };
-  }, [repository, reset, router, router.isReady, router.query.examId, today]);
+  }, [authUser, isAuthLoading, repository, reset, router, router.isReady, router.query.examId, today]);
 
   const maxStudyStartDate =
     exam == null ? today : format(addDays(parseISO(exam.start_date), -1), "yyyy-MM-dd");
@@ -140,6 +143,56 @@ export default function PlanModePage() {
     void router.push(routePaths.dailyPlan(examId));
   };
 
+  const buildAllocationData = async (values: AutoFormValues, now: string) => {
+    if (examId == null || exam == null) return null;
+
+    const rule: AvailabilityRule = {
+      id: existingRule?.id ?? generateUuid(),
+      exam_id: examId,
+      weekday_club_minutes: values.weekday_club_minutes,
+      weekday_no_club_minutes: values.weekday_no_club_minutes,
+      weekend_minutes: values.weekend_minutes,
+      club_days: values.club_days,
+      pre_exam_rest_mode: values.pre_exam_rest_mode,
+      study_start_date: values.study_start_date,
+      created_at: existingRule?.created_at ?? now,
+      updated_at: now,
+    };
+
+    const allSubjects = await repository.listExamSubjects();
+    const subjects = allSubjects.filter((subject) => subject.exam_id === examId);
+    const dailyPlans = allocate(subjects, rule, exam);
+    const totalMinutes = dailyPlans.reduce((sum, dp) => sum + dp.planned_minutes, 0);
+    const subjectMinutesMap = new Map<string, number>();
+
+    for (const dp of dailyPlans) {
+      subjectMinutesMap.set(
+        dp.exam_subject_id,
+        (subjectMinutesMap.get(dp.exam_subject_id) ?? 0) + dp.planned_minutes,
+      );
+    }
+
+    const studyPlans: StudyPlan[] = subjects
+      .filter((subject) => (subjectMinutesMap.get(subject.id) ?? 0) >= 10)
+      .map((subject) => {
+        const plannedMinutes = subjectMinutesMap.get(subject.id)!;
+        const ratio =
+          totalMinutes > 0 ? Math.round((plannedMinutes / totalMinutes) * 10000) / 10000 : 0;
+
+        return {
+          id: generateUuid(),
+          exam_subject_id: subject.id,
+          planned_minutes: plannedMinutes,
+          planned_ratio: ratio,
+          reason: null,
+          created_at: now,
+          updated_at: now,
+        };
+      });
+
+    return { rule, studyPlans, dailyPlans };
+  };
+
   const onSubmit = handleSubmit(async (values) => {
     if (examId == null || exam == null) {
       return;
@@ -153,73 +206,66 @@ export default function PlanModePage() {
     const now = new Date().toISOString();
 
     try {
-      const rule: AvailabilityRule = {
-        id: existingRule?.id ?? generateUuid(),
-        exam_id: examId,
-        weekday_club_minutes: values.weekday_club_minutes,
-        weekday_no_club_minutes: values.weekday_no_club_minutes,
-        weekend_minutes: values.weekend_minutes,
-        club_days: values.club_days,
-        pre_exam_rest_mode: values.pre_exam_rest_mode,
-        study_start_date: values.study_start_date,
-        created_at: existingRule?.created_at ?? now,
-        updated_at: now,
-      };
+      const allocation = await buildAllocationData(values, now);
+      if (allocation == null) return;
 
+      const { rule, studyPlans, dailyPlans } = allocation;
+
+      if (authUser != null && supabase != null) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+
+        if (accessToken != null) {
+          const response = await fetch("/api/allocations/save-auto", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              examId,
+              expectedVersion: exam.version,
+              availabilityRule: rule,
+              studyPlans,
+              dailyPlans,
+            }),
+          });
+
+          if (!response.ok) {
+            const body = await response.json() as { error?: { message?: string } };
+            console.error("save-auto failed:", body.error?.message);
+            return;
+          }
+
+          void router.push(routePaths.dailyPlan(examId));
+          return;
+        }
+      }
+
+      // Guest path: use repository directly
       if (existingRule == null) {
         await repository.createAvailabilityRule(rule);
       } else {
         await repository.updateAvailabilityRule(rule);
       }
 
-      const allSubjects = await repository.listExamSubjects();
-      const subjects = allSubjects.filter((subject) => subject.exam_id === examId);
-      const dailyPlans = allocate(subjects, rule, exam);
-      const totalMinutes = dailyPlans.reduce((sum, dp) => sum + dp.planned_minutes, 0);
-      const subjectMinutesMap = new Map<string, number>();
-
-      for (const dp of dailyPlans) {
-        subjectMinutesMap.set(
-          dp.exam_subject_id,
-          (subjectMinutesMap.get(dp.exam_subject_id) ?? 0) + dp.planned_minutes,
-        );
-      }
-
-      const studyPlans = subjects
-        .filter((subject) => (subjectMinutesMap.get(subject.id) ?? 0) >= 10)
-        .map((subject) => {
-          const plannedMinutes = subjectMinutesMap.get(subject.id)!;
-          const ratio =
-            totalMinutes > 0 ? Math.round((plannedMinutes / totalMinutes) * 10000) / 10000 : 0;
-
-          return {
-            id: generateUuid(),
-            exam_subject_id: subject.id,
-            planned_minutes: plannedMinutes,
-            planned_ratio: ratio,
-            reason: null,
-            created_at: now,
-            updated_at: now,
-          } satisfies StudyPlan;
-        });
-
       const allStudyPlans = await repository.listStudyPlans();
-      const subjectIds = new Set(subjects.map((subject) => subject.id));
-      for (const studyPlan of allStudyPlans.filter((item) => subjectIds.has(item.exam_subject_id))) {
-        await repository.deleteStudyPlan(studyPlan.id);
+      const subjectIds = new Set(studyPlans.map((sp) => sp.exam_subject_id));
+      for (const sp of allStudyPlans.filter((item) => subjectIds.has(item.exam_subject_id))) {
+        await repository.deleteStudyPlan(sp.id);
       }
 
       const allDailyPlans = await repository.listDailyPlans();
-      for (const dailyPlan of allDailyPlans.filter((item) => item.exam_id === examId)) {
-        await repository.deleteDailyPlan(dailyPlan.id);
+      for (const dp of allDailyPlans.filter((item) => item.exam_id === examId)) {
+        await repository.deleteDailyPlan(dp.id);
       }
 
-      for (const studyPlan of studyPlans) {
-        await repository.createStudyPlan(studyPlan);
+      for (const sp of studyPlans) {
+        await repository.createStudyPlan(sp);
       }
 
-      for (const dailyPlan of dailyPlans) {
-        await repository.createDailyPlan(dailyPlan);
+      for (const dp of dailyPlans) {
+        await repository.createDailyPlan(dp);
       }
 
       void router.push(routePaths.dailyPlan(examId));
