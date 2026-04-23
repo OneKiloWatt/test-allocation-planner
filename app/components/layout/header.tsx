@@ -4,6 +4,8 @@ import { ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { useExamStore } from "@/stores";
 import { routePaths } from "./routes";
 
 type HeaderShellProps = {
@@ -68,9 +70,20 @@ export function AppHeader({
   title,
   subtitle,
   accountHref = routePaths.authLogin(),
-  accountLabel = "アカウント",
+  accountLabel = "ログイン",
   rightSlot,
 }: AppHeaderProps) {
+  const router = useRouter();
+  const authUser = useExamStore((state) => state.authUser);
+
+  const handleSignOut = async () => {
+    if (supabase != null) {
+      await supabase.auth.signOut();
+    }
+
+    void router.replace(routePaths.top());
+  };
+
   return (
     <HeaderShell className={className}>
       <div className="flex min-w-0 flex-col">
@@ -81,12 +94,22 @@ export function AppHeader({
       </div>
       <div className="flex items-center gap-card-gap">
         {rightSlot}
-        <Link
-          href={accountHref}
-          className="inline-flex items-center rounded-full border border-border bg-surface px-card py-card text-sm font-medium text-text transition-colors hover:bg-muted"
-        >
-          {accountLabel}
-        </Link>
+        {authUser ? (
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="inline-flex items-center rounded-full border border-border bg-surface px-card py-card text-sm font-medium text-text transition-colors hover:bg-muted"
+          >
+            ログアウト
+          </button>
+        ) : (
+          <Link
+            href={accountHref}
+            className="inline-flex items-center rounded-full border border-border bg-surface px-card py-card text-sm font-medium text-text transition-colors hover:bg-muted"
+          >
+            {accountLabel}
+          </Link>
+        )}
       </div>
     </HeaderShell>
   );
