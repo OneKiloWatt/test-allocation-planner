@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { hasValidGuestSession } from "@/lib/guest-session";
 import type { ExamSubject } from "@/lib/schemas";
 import { cn, normalizeSubjectName } from "@/lib/utils";
-import { useRepository } from "@/stores";
+import { useExamStore, useRepository } from "@/stores";
 
 type SubjectState = {
   targetScore: string;
@@ -32,6 +32,8 @@ function getInitialTargetScore(subject: ExamSubject) {
 export default function TargetScorePage() {
   const router = useRouter();
   const repository = useRepository();
+  const authUser = useExamStore((state) => state.authUser);
+  const isAuthLoading = useExamStore((state) => state.isAuthLoading);
   const [isReady, setIsReady] = useState(false);
   const [examId, setExamId] = useState<string | null>(null);
   const [subjects, setSubjects] = useState<LoadedSubject[]>([]);
@@ -43,11 +45,11 @@ export default function TargetScorePage() {
   const [subjectStates, setSubjectStates] = useState<Record<string, SubjectState>>({});
 
   useEffect(() => {
-    if (!router.isReady) {
+    if (!router.isReady || isAuthLoading) {
       return;
     }
 
-    if (!hasValidGuestSession()) {
+    if (authUser == null && !hasValidGuestSession()) {
       void router.replace(routePaths.top());
       return;
     }
@@ -118,7 +120,7 @@ export default function TargetScorePage() {
     return () => {
       isMounted = false;
     };
-  }, [repository, router, router.isReady, router.query.examId]);
+  }, [authUser, isAuthLoading, repository, router, router.isReady, router.query.examId]);
 
   const mismatch = useMemo(
     () => hasPreviousExam && subjects.some((subject) => subject.matchedPrevious == null),

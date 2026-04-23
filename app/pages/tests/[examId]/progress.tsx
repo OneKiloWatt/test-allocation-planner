@@ -14,7 +14,7 @@ import {
 import { RecordConflictError } from "@/lib/repositories";
 import type { Exam, ExamSubject, ProgressLog, StudyPlan } from "@/lib/schemas";
 import { cn, formatDateToString, generateUuid } from "@/lib/utils";
-import { useRepository } from "@/stores";
+import { useExamStore, useRepository } from "@/stores";
 
 const SAVED_HINTS = [
   { text: "25〜45分ごとに短い休憩を取ると集中力が続きます", cite: "Ariga & Lleras 2011" },
@@ -38,6 +38,8 @@ type ViewMode = "form" | "saved";
 export default function ProgressLogPage() {
   const router = useRouter();
   const repository = useRepository();
+  const authUser = useExamStore((state) => state.authUser);
+  const isAuthLoading = useExamStore((state) => state.isAuthLoading);
   const [isReady, setIsReady] = useState(false);
   const [examId, setExamId] = useState<string | null>(null);
   const [exam, setExam] = useState<Exam | null>(null);
@@ -61,11 +63,11 @@ export default function ProgressLogPage() {
   const hint = SAVED_HINTS[dayOfYear % SAVED_HINTS.length];
 
   useEffect(() => {
-    if (!router.isReady) {
+    if (!router.isReady || isAuthLoading) {
       return;
     }
 
-    if (!hasValidGuestSession()) {
+    if (authUser == null && !hasValidGuestSession()) {
       void router.replace(routePaths.top());
       return;
     }
@@ -117,7 +119,7 @@ export default function ProgressLogPage() {
     return () => {
       isMounted = false;
     };
-  }, [repository, router, router.isReady, router.query.examId, today]);
+  }, [authUser, isAuthLoading, repository, router, router.isReady, router.query.examId, today]);
 
   const subjectMap = useMemo(
     () => new Map(subjects.map((subject) => [subject.id, subject])),

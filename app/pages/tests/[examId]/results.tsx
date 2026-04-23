@@ -11,7 +11,7 @@ import { sumProgressMinutesBySubject } from "@/lib/logic/result-review";
 import { RecordConflictError } from "@/lib/repositories";
 import type { Exam, ExamResult, ExamSubject } from "@/lib/schemas";
 import { cn, generateUuid } from "@/lib/utils";
-import { useRepository } from "@/stores";
+import { useExamStore, useRepository } from "@/stores";
 
 const SCORE_OVER_MAX_MESSAGE = "100点までの数字を入れてみましょう";
 const MISSING_MINUTES_MESSAGE =
@@ -91,6 +91,8 @@ function buildRows(
 export default function ResultEntryPage() {
   const router = useRouter();
   const repository = useRepository();
+  const authUser = useExamStore((state) => state.authUser);
+  const isAuthLoading = useExamStore((state) => state.isAuthLoading);
   const [isReady, setIsReady] = useState(false);
   const [examId, setExamId] = useState<string | null>(null);
   const [exam, setExam] = useState<Exam | null>(null);
@@ -102,11 +104,11 @@ export default function ResultEntryPage() {
   const [showSavedPrompt, setShowSavedPrompt] = useState(false);
 
   useEffect(() => {
-    if (!router.isReady) {
+    if (!router.isReady || isAuthLoading) {
       return;
     }
 
-    if (!hasValidGuestSession()) {
+    if (authUser == null && !hasValidGuestSession()) {
       void router.replace(routePaths.top());
       return;
     }
@@ -161,7 +163,7 @@ export default function ResultEntryPage() {
     return () => {
       isMounted = false;
     };
-  }, [repository, router, router.isReady, router.query.examId]);
+  }, [authUser, isAuthLoading, repository, router, router.isReady, router.query.examId]);
 
   const dirty = useMemo(() => {
     return isReady && serializeRows(rows) !== baseline && !showSavedPrompt;

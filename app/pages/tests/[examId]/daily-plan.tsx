@@ -17,7 +17,7 @@ import {
   groupDailyPlansByDate,
 } from "@/lib/logic/daily-plan-view";
 import type { DailyPlan, Exam, ExamSubject, StudyPlan } from "@/lib/schemas";
-import { useRepository } from "@/stores";
+import { useExamStore, useRepository } from "@/stores";
 
 function SubjectDot({ subject }: { subject: ExamSubject }) {
   return (
@@ -34,6 +34,8 @@ function SubjectDot({ subject }: { subject: ExamSubject }) {
 export default function DailyPlanPage() {
   const router = useRouter();
   const repository = useRepository();
+  const authUser = useExamStore((state) => state.authUser);
+  const isAuthLoading = useExamStore((state) => state.isAuthLoading);
   const [isReady, setIsReady] = useState(false);
   const [examId, setExamId] = useState<string | null>(null);
   const [exam, setExam] = useState<Exam | null>(null);
@@ -42,11 +44,11 @@ export default function DailyPlanPage() {
   const [dailyPlans, setDailyPlans] = useState<DailyPlan[]>([]);
 
   useEffect(() => {
-    if (!router.isReady) {
+    if (!router.isReady || isAuthLoading) {
       return;
     }
 
-    if (!hasValidGuestSession()) {
+    if (authUser == null && !hasValidGuestSession()) {
       void router.replace(routePaths.top());
       return;
     }
@@ -106,7 +108,7 @@ export default function DailyPlanPage() {
     return () => {
       isMounted = false;
     };
-  }, [repository, router, router.isReady, router.query.examId]);
+  }, [authUser, isAuthLoading, repository, router, router.isReady, router.query.examId]);
 
   const subjectMap = useMemo(
     () => new Map(subjects.map((subject) => [subject.id, subject])),

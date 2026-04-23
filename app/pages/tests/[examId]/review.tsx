@@ -15,7 +15,7 @@ import { formatDate, formatMinutes, getSubjectColor } from "@/lib/logic/daily-pl
 import { buildResultReviewRows, buildResultSummary } from "@/lib/logic/result-review";
 import type { Exam, ExamResult, ExamSubject, StudyPlan } from "@/lib/schemas";
 import { cn } from "@/lib/utils";
-import { useRepository } from "@/stores";
+import { useExamStore, useRepository } from "@/stores";
 
 function SubjectDot({ subject }: { subject: ExamSubject }) {
   return (
@@ -40,6 +40,8 @@ function formatDiff(value: number, suffix: string) {
 export default function ReviewPage() {
   const router = useRouter();
   const repository = useRepository();
+  const authUser = useExamStore((state) => state.authUser);
+  const isAuthLoading = useExamStore((state) => state.isAuthLoading);
   const [isReady, setIsReady] = useState(false);
   const [examId, setExamId] = useState<string | null>(null);
   const [exam, setExam] = useState<Exam | null>(null);
@@ -48,11 +50,11 @@ export default function ReviewPage() {
   const [results, setResults] = useState<ExamResult[]>([]);
 
   useEffect(() => {
-    if (!router.isReady) {
+    if (!router.isReady || isAuthLoading) {
       return;
     }
 
-    if (!hasValidGuestSession()) {
+    if (authUser == null && !hasValidGuestSession()) {
       void router.replace(routePaths.top());
       return;
     }
@@ -105,7 +107,7 @@ export default function ReviewPage() {
     return () => {
       isMounted = false;
     };
-  }, [repository, router, router.isReady, router.query.examId]);
+  }, [authUser, isAuthLoading, repository, router, router.isReady, router.query.examId]);
 
   const rows = useMemo(
     () => buildResultReviewRows(subjects, studyPlans, results),
