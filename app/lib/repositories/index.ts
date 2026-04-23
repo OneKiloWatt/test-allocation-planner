@@ -12,3 +12,4 @@ export {
   LocalStorageRepository,
   createLocalStorageRepository,
 } from "./local-storage-repository";
+export { SupabaseRepository } from "./supabase-repository";
