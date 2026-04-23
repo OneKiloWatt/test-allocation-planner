@@ -12,6 +12,10 @@ export function generateUuid() {
   return crypto.randomUUID();
 }
 
+export function normalizeSubjectName(value: string) {
+  return value.normalize("NFKC").trim().toLowerCase().replace(/\s+/g, "");
+}
+
 function ensureValidDate(value: Date, label: string) {
   if (!isValid(value)) {
     throw new RangeError(`Invalid ${label}`);

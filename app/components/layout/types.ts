@@ -13,6 +13,7 @@ export type RouteKey =
   | "HOME"
   | "TEST_CREATE"
   | "TARGET_SCORE"
+  | "PLAN_MODE"
   | "DAILY_PLAN"
   | "PROGRESS_LOG"
   | "RESULT_ENTRY"
@@ -28,7 +29,7 @@ export type RouteDefinition = {
   access: RouteAccess;
   layout: LayoutVariant;
   header: HeaderVariant;
-  bottomNavSection?: BottomNavSection;
+  bottomNavSection?: BottomNavSection | null;
   title: string;
 };
 
