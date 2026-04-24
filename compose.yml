@@ -17,9 +17,7 @@ services:
       - -c
       - |
         if [ -f package.json ]; then
-          if [ ! -x node_modules/.bin/next ]; then
-            npm install
-          fi
+          npm install
           npm run dev
         else
           echo "package.json not found. Run create-next-app inside the container first."
