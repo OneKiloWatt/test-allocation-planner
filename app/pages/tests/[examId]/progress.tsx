@@ -5,6 +5,7 @@ import { BackHeader, Layout, routePaths } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PageLoadingState } from "@/components/ui/page-loading-state";
 import { hasValidGuestSession } from "@/lib/guest-session";
 import { formatMinutes, getSubjectColor } from "@/lib/logic/daily-plan-view";
 import {
@@ -24,7 +25,7 @@ const SAVED_HINTS = [
 function SubjectDot({ subject, size = 28 }: { subject: ExamSubject; size?: number }) {
   return (
     <span
-      className="inline-flex shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+      className="inline-flex shrink-0 items-center justify-center rounded-[7px] text-sm font-semibold text-white"
       style={{ width: size, height: size, backgroundColor: getSubjectColor(subject) }}
       aria-hidden="true"
     >
@@ -208,7 +209,11 @@ export default function ProgressLogPage() {
   };
 
   if (!isReady || exam == null || examId == null) {
-    return null;
+    return (
+      <Layout variant="form" header={<BackHeader title="進捗を記録する" />}>
+        <PageLoadingState message="進捗記録の画面を読み込んでいます。" />
+      </Layout>
+    );
   }
 
   const selectedSubject = savedLog == null ? null : subjectMap.get(savedLog.exam_subject_id) ?? null;
@@ -234,29 +239,40 @@ export default function ProgressLogPage() {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="space-y-3">
-                  <p className="text-sm font-medium text-foreground">科目</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <fieldset className="space-y-3">
+                    <legend className="text-sm font-medium text-foreground">科目</legend>
+                    <div className="grid grid-cols-2 gap-3">
                     {subjects.map((subject) => {
                       const isSelected = subject.id === selectedSubjectId;
                       const isLoggedToday = todayLogs.some(
                         (log) => log.exam_subject_id === subject.id,
                       );
+                      const inputId = `subject-${subject.id}`;
 
                       return (
-                        <button
+                        <label
                           key={subject.id}
-                          type="button"
+                          htmlFor={inputId}
                           className={cn(
-                            "flex min-h-20 flex-col items-start gap-2 rounded-xl border px-4 py-3 text-left transition-colors",
+                            "flex min-h-20 cursor-pointer flex-col items-start gap-2 rounded-xl border px-4 py-3 text-left transition-colors",
+                            "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/40 has-[:focus-visible]:ring-offset-2",
                             isSelected
                               ? "border-primary bg-primary text-primary-foreground"
                               : "border-border bg-background text-foreground",
                           )}
-                          onClick={() => {
-                            setSelectedSubjectId(subject.id);
-                            setFormError(null);
-                          }}
                         >
+                          <input
+                            id={inputId}
+                            type="radio"
+                            name="progress-subject"
+                            value={subject.id}
+                            checked={isSelected}
+                            className="sr-only"
+                            onChange={() => {
+                              setSelectedSubjectId(subject.id);
+                              setFormError(null);
+                            }}
+                          />
                           <div className="flex w-full items-center gap-2">
                             <SubjectDot subject={subject} size={24} />
                             <span className="min-w-0 truncate text-sm font-semibold">
@@ -277,10 +293,11 @@ export default function ProgressLogPage() {
                           ) : (
                             <span className="text-xs opacity-80">選択して記録</span>
                           )}
-                        </button>
+                        </label>
                       );
                     })}
-                  </div>
+                    </div>
+                  </fieldset>
                 </div>
 
                 <div className="space-y-2">

@@ -9,6 +9,7 @@ import { BackHeader, Layout, routePaths } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PageLoadingState } from "@/components/ui/page-loading-state";
 import { hasValidGuestSession } from "@/lib/guest-session";
 import { allocate } from "@/lib/logic/allocation";
 import { supabase } from "@/lib/supabase";
@@ -275,7 +276,11 @@ export default function PlanModePage() {
   });
 
   if (!isReady || exam == null) {
-    return null;
+    return (
+      <Layout variant="form" header={<BackHeader title="日程・予定の設定" />}>
+        <PageLoadingState message="日程・予定の設定画面を読み込んでいます。" />
+      </Layout>
+    );
   }
 
   return (

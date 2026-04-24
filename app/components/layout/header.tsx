@@ -68,9 +68,10 @@ export function TopHeader({
         ) : null}
         <Link
           href={brandHref}
+          aria-label={`${brandLabel} ホーム`}
           className="inline-flex items-center rounded-full text-sm font-semibold tracking-wide text-text"
         >
-          {brandLabel}
+          <img src="/logo.svg" alt="" className="block h-auto w-[210px]" />
         </Link>
       </div>
     </HeaderShell>

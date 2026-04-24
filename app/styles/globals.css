@@ -17,6 +17,8 @@
   --active-tab: var(--primary);
   --inactive-tab: #7f6d61;
   --muted-text: #6f6054;
+  --shadow-sm: 0 1px 2px rgba(60,40,25,0.04);
+  --shadow: 0 1px 3px rgba(60,40,25,0.06), 0 6px 16px rgba(60,40,25,0.04);
 
   --foreground: var(--text);
   --card: var(--surface);
@@ -35,11 +37,13 @@
   --space-card-gap: 12px;
   --space-section-gap: 24px;
   --space-safe-area-bottom: env(safe-area-inset-bottom);
-  --space-bottom-nav-safe: calc(var(--size-bottom-nav) + var(--space-safe-area-bottom));
+  --space-bottom-nav-safe: calc(var(--size-bottom-nav) + var(--space-safe-area-bottom) + 24px);
 
   --size-header-mobile: 56px;
-  --size-bottom-nav: 64px;
+  --size-bottom-nav: 76px;
   --size-content-max: 390px;
+  --font-app-sans: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-num: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 @theme inline {
@@ -82,7 +86,7 @@
   --height-bottom-nav: var(--size-bottom-nav);
   --max-width-content: var(--size-content-max);
 
-  --font-sans: var(--font-geist-sans, ui-sans-serif, system-ui, sans-serif);
+  --font-sans: var(--font-app-sans);
   --font-mono: var(--font-geist-mono, ui-monospace, SFMono-Regular, monospace);
 }
 
@@ -95,7 +99,9 @@ body {
   min-height: 100dvh;
   background: var(--background);
   color: var(--text);
-  font-family: var(--font-geist-sans, ui-sans-serif, system-ui, sans-serif);
+  font-family: var(--font-app-sans);
+  font-feature-settings: "palt";
+  -webkit-font-smoothing: antialiased;
 }
 
 * {

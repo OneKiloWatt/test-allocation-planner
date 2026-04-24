@@ -5,6 +5,7 @@ import { BackHeader, Layout, routePaths } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PageLoadingState } from "@/components/ui/page-loading-state";
 import { hasValidGuestSession } from "@/lib/guest-session";
 import type { ExamSubject } from "@/lib/schemas";
 import { cn, normalizeSubjectName } from "@/lib/utils";
@@ -215,7 +216,11 @@ export default function TargetScorePage() {
   };
 
   if (!isReady) {
-    return null;
+    return (
+      <Layout variant="form" header={<BackHeader title="目標点数" />}>
+        <PageLoadingState message="目標点数の画面を読み込んでいます。" />
+      </Layout>
+    );
   }
 
   return (

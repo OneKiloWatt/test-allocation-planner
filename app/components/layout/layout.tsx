@@ -15,7 +15,7 @@ export function Layout({
   const shellPaddingClass =
     variant === "marketing" ? "pt-section-gap" : "pt-card-gap";
   const contentPaddingClass =
-    variant === "legal" ? "pt-card-gap" : "pt-section-gap";
+    variant === "legal" ? "pt-card-gap" : "pt-0";
   const bottomPaddingClass = bottomNav ? "pb-bottom-nav-safe" : "pb-section-gap";
 
   return (

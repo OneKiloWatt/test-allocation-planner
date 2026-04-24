@@ -10,6 +10,7 @@ import {
 } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageLoadingState } from "@/components/ui/page-loading-state";
 import { hasValidGuestSession } from "@/lib/guest-session";
 import { formatDate, formatMinutes, getSubjectColor } from "@/lib/logic/daily-plan-view";
 import { buildResultReviewRows, buildResultSummary } from "@/lib/logic/result-review";
@@ -20,7 +21,7 @@ import { useExamStore, useRepository } from "@/stores";
 function SubjectDot({ subject }: { subject: ExamSubject }) {
   return (
     <span
-      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[7px] text-sm font-semibold text-white"
       style={{ backgroundColor: getSubjectColor(subject) }}
       aria-hidden="true"
     >
@@ -118,7 +119,11 @@ export default function ReviewPage() {
   const hasCompleteResults = subjects.length > 0 && rows.length === subjects.length;
 
   if (!isReady || exam == null || examId == null) {
-    return null;
+    return (
+      <Layout variant="app" header={<AppHeader title="振り返り" />}>
+        <PageLoadingState message="振り返り画面を読み込んでいます。" />
+      </Layout>
+    );
   }
 
   return (

@@ -13,6 +13,7 @@ import {
 } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageLoadingState } from "@/components/ui/page-loading-state";
 import { hasValidGuestSession } from "@/lib/guest-session";
 import { buildHomeViewState } from "@/lib/logic/home-view";
 import { formatDate, formatMinutes, getSubjectColor } from "@/lib/logic/daily-plan-view";
@@ -38,7 +39,7 @@ const HINTS = [
 function SubjectDot({ subject, size = 28 }: { subject: ExamSubject; size?: number }) {
   return (
     <span
-      className="inline-flex shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+      className="inline-flex shrink-0 items-center justify-center rounded-[7px] text-sm font-semibold text-white"
       style={{ width: size, height: size, backgroundColor: getSubjectColor(subject) }}
       aria-hidden="true"
     >
@@ -129,8 +130,8 @@ function ProgressRow({
 
 function HomeEmpty({ onCreate }: { onCreate: () => void }) {
   return (
-    <LayoutStack className="pt-section-gap">
-      <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card">
+    <LayoutStack className="pt-card-gap">
+      <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card shadow-[var(--shadow)]">
         <CardHeader className="gap-3">
           <div className="flex items-center gap-2 text-sm font-medium text-primary">
             <ClipboardList className="h-4 w-4" aria-hidden="true" />
@@ -138,19 +139,19 @@ function HomeEmpty({ onCreate }: { onCreate: () => void }) {
           </div>
           <div className="space-y-2">
             <CardTitle className="text-2xl leading-tight text-foreground">
-              まずは次のテストを作成しましょう
+              まずはテストを作りましょう
             </CardTitle>
             <CardDescription className="text-sm leading-6">
-              テスト日程と科目を入れると、教科ごとの目安時間を出せます。
+              日程と科目を入れるだけで、学習プランの準備が始まります。
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
           <ol className="space-y-3">
             {[
-              "テスト名と日程を入れる",
-              "科目ごとに目標点数を決める",
-              "毎日の予定から学習プランを作る",
+              "テストを作る",
+              "目標点数を入れる",
+              "学習プランを作る",
             ].map((label, index) => (
               <li key={label} className="flex items-center gap-3 rounded-xl border bg-card/80 px-4 py-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
@@ -189,8 +190,8 @@ function HomePlanning({
       : "日程・予定を設定する";
 
   return (
-    <LayoutStack className="pt-section-gap">
-      <Card className="border-primary/20 bg-primary/10">
+    <LayoutStack className="pt-card-gap">
+      <Card className="border-primary/20 bg-primary/10 shadow-[var(--shadow-sm)]">
         <CardHeader className="space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium text-primary">
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
@@ -199,9 +200,9 @@ function HomePlanning({
             <span className="text-muted-foreground">{exam.name}</span>
           </div>
           <CardTitle className="text-2xl leading-tight text-foreground">
-            目標点数と日程を入れて
+            目標点数と日程・予定を入れて
             <br />
-            配分案を作りましょう
+            学習プランを作りましょう
           </CardTitle>
         </CardHeader>
       </Card>
@@ -209,18 +210,18 @@ function HomePlanning({
       <div className="space-y-3">
         <StepItem done label="テストを作成" sub={`${exam.name} · ${formatDate(exam.start_date)}開始`} />
         <StepItem
-          label="目標点数を入力"
+          label="目標点数を入れる"
           sub={`${subjects.length}科目`}
           done={hasTargets}
           current={!hasTargets}
         />
         <StepItem
-          label="日程・予定を入力"
+          label="日程・予定を入れる"
           sub="自動 or 手動"
           done={hasDailyPlan}
           current={hasTargets && !hasDailyPlan}
         />
-        <StepItem label="学習プランを確認" sub="教科別の目安時間" />
+        <StepItem label="学習プランを確認" sub="科目ごとの目安時間" />
       </div>
 
       <Button onClick={onCta} size="lg" className="w-full">
@@ -269,7 +270,7 @@ function HomeActive({
   const hint = HINTS[dayOfYear % HINTS.length];
 
   return (
-    <LayoutStack className="pt-section-gap">
+    <LayoutStack className="pt-card-gap">
       <section className="rounded-xl border border-primary/20 bg-primary/10 px-4 py-3">
         <div className="flex items-center gap-3">
           <CalendarDays className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -363,7 +364,7 @@ function HomeFinishedPending({
   onLater: () => void;
 }) {
   return (
-    <LayoutStack className="pt-section-gap">
+    <LayoutStack className="pt-card-gap">
       <Card>
         <CardHeader className="space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium text-primary">
@@ -476,7 +477,17 @@ export default function HomePage() {
   );
 
   if (!isAuthorized || viewState == null) {
-    return null;
+    return (
+      <Layout
+        variant="app"
+        header={<AppHeader title="ホーム" subtitle={authUser == null ? "ゲスト利用中" : undefined} />}
+        bottomNav={<BottomNav items={homeOnlyBottomNavItems} pathname={routePaths.home()} />}
+      >
+        <LayoutStack className="pt-card-gap">
+          <PageLoadingState message="ホームの内容を読み込んでいます。" />
+        </LayoutStack>
+      </Layout>
+    );
   }
 
   const { finishedPendingExam, activeExam, planningExam, subjects, studyPlans, dailyPlans, progressLogs } =

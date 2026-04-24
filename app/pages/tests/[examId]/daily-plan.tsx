@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PageLoadingState } from "@/components/ui/page-loading-state";
 import { hasValidGuestSession } from "@/lib/guest-session";
 import { getStudyDays } from "@/lib/logic/available-time";
 import {
@@ -40,7 +41,7 @@ type SaveWarning = {
 function SubjectDot({ subject }: { subject: ExamSubject }) {
   return (
     <span
-      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[7px] text-sm font-semibold text-white"
       style={{ backgroundColor: getSubjectColor(subject) }}
       aria-hidden="true"
     >
@@ -552,7 +553,11 @@ export default function DailyPlanPage() {
   };
 
   if (!isReady || exam == null || examId == null) {
-    return null;
+    return (
+      <Layout variant="app" header={<AppHeader title="学習プラン" />}>
+        <PageLoadingState message="学習プランを読み込んでいます。" />
+      </Layout>
+    );
   }
 
   return (

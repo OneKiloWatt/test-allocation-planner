@@ -16,9 +16,10 @@ export function BottomNav({ items, pathname, className }: BottomNavProps) {
     <nav
       aria-label="ボトムナビゲーション"
       className={cn(
-        "flex h-bottom-nav w-full items-stretch gap-card-gap",
+        "grid min-h-[60px] w-full items-stretch gap-2",
         className,
       )}
+      style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
     >
       {items.map((item) => {
         const active = isBottomNavItemActive(item, pathname);
@@ -30,10 +31,10 @@ export function BottomNav({ items, pathname, className }: BottomNavProps) {
             aria-current={active ? "page" : undefined}
             data-active={active ? "true" : undefined}
             className={cn(
-              "flex flex-1 items-center justify-center rounded-xl border border-transparent px-card py-card text-sm font-medium transition-colors",
+              "flex min-h-11 items-center justify-center rounded-[14px] border border-transparent px-3 py-2 text-sm font-medium transition-colors",
               active
-                ? "border-primary/20 bg-primary/10 text-active-tab"
-                : "text-inactive-tab hover:bg-muted hover:text-text",
+                ? "border-primary/15 bg-primary/10 text-active-tab"
+                : "text-inactive-tab hover:bg-muted/70 hover:text-text",
             )}
           >
             <span className="flex min-w-0 flex-col items-center gap-1 text-center">
@@ -54,8 +55,8 @@ type BottomNavShellProps = {
 
 export function BottomNavShell({ children, className }: BottomNavShellProps) {
   return (
-    <div className={cn("border-t border-border bg-surface/95 backdrop-blur", className)}>
-      <div className="mx-auto flex w-full max-w-content items-stretch px-screen pb-safe-area-bottom">
+    <div className={cn("pointer-events-none mx-auto w-full max-w-content px-[10px] pb-[calc(env(safe-area-inset-bottom)+10px)]", className)}>
+      <div className="pointer-events-auto rounded-[18px] border border-border bg-[rgba(250,246,240,0.9)] p-2 shadow-[var(--shadow)] [backdrop-filter:blur(14px)_saturate(160%)] [-webkit-backdrop-filter:blur(14px)_saturate(160%)]">
         {children}
       </div>
     </div>
